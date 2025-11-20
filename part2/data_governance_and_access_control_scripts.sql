@@ -63,23 +63,7 @@ MAX result_rows = 500000,
 MAX read_rows = 50000000
 TO product_role;
 
--- 5 Row-level security using views
-CREATE VIEW IF NOT EXISTS secure_finance_view AS
-SELECT
-    event_time,
-    user_id,
-    session_id,
-    channel,
-    product_type,
-    payment_method,
-    payment_status,
-    total_amount,
-    net_amount,
-    currency
-FROM denormalized_purchase_events
-WHERE payment_status = 'completed';
-
--- 6 Data masking view
+-- 5 Data masking view
 CREATE VIEW IF NOT EXISTS masked_purchase_events AS
 SELECT
     event_time,
@@ -103,18 +87,4 @@ SELECT
     END AS amount_category
 FROM denormalized_purchase_events;
 
--- 7 Audit table
-CREATE TABLE IF NOT EXISTS access_audit_log
-(
-    access_time DateTime DEFAULT now(),
-    user_name String,
-    query_text String,
-    table_name String,
-    rows_read UInt64,
-    execution_time_ms UInt64
-)
-ENGINE = MergeTree()
-PARTITION BY toYYYYMM(access_time)
-ORDER BY (access_time, user_name)
-SETTINGS index_granularity = 8192;
 

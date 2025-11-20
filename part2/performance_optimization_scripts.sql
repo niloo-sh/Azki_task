@@ -45,13 +45,15 @@ ALTER TABLE denormalized_purchase_events MATERIALIZE INDEX idx_payment_status;
 -- =============================================================================
 -- 3 Materialized columns for computed values
 
-ALTER TABLE denormalized_purchase_events
-add COLUMN is_high_value
-UInt8  DEFAULT CASE WHEN net_amount > 1000000 THEN 1 ELSE 0 END;
+
 
 ALTER TABLE denormalized_purchase_events
 ADD COLUMN IF NOT EXISTS revenue_per_unit Decimal(18, 2) MATERIALIZED
     CASE WHEN product_price > 0 THEN net_amount / product_price ELSE 0 END;
+
+
+ALTER TABLE denormalized_purchase_events
+add COLUMN is_high_value UInt8  DEFAULT CASE WHEN net_amount > 1000000 THEN 1 ELSE 0 END;
 
 ALTER TABLE denormalized_purchase_events
 ADD COLUMN IF NOT EXISTS is_high_value UInt8 MATERIALIZED

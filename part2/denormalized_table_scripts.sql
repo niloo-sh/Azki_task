@@ -1,11 +1,3 @@
--- ============================================================================
--- ClickHouse Denormalized Purchase Events Setup
--- Part 2 - Query Performance and Data Governance
--- ============================================================================
-
--- 1. CREATE SOURCE TABLES
--- ============================================================================
-
 CREATE TABLE IF NOT EXISTS user_events
 (
     event_time DateTime,
@@ -25,16 +17,15 @@ CREATE TABLE IF NOT EXISTS third_order
     order_id UInt64,
     user_id UInt64,
     order_time DateTime,
-    product_name String,
     company_name String,
     price Decimal(18, 2),
     discount_percentage UInt32,
     discount_amount Decimal(18, 2),
     status String
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 PARTITION BY toYYYYMM(order_time)
-ORDER BY (order_id, user_id, order_time)
+ORDER BY (order_id, user_id)
 SETTINGS index_granularity = 8192;
 
 CREATE TABLE IF NOT EXISTS body_order
@@ -42,16 +33,15 @@ CREATE TABLE IF NOT EXISTS body_order
     order_id UInt64,
     user_id UInt64,
     order_time DateTime,
-    product_name String,
     company_name String,
     price Decimal(18, 2),
     discount_percentage UInt32,
     discount_amount Decimal(18, 2),
     status String
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 PARTITION BY toYYYYMM(order_time)
-ORDER BY (order_id, user_id, order_time)
+ORDER BY (order_id, user_id)
 SETTINGS index_granularity = 8192;
 
 CREATE TABLE IF NOT EXISTS medical_order
@@ -59,16 +49,15 @@ CREATE TABLE IF NOT EXISTS medical_order
     order_id UInt64,
     user_id UInt64,
     order_time DateTime,
-    product_name String,
     company_name String,
     price Decimal(18, 2),
     discount_percentage UInt32,
     discount_amount Decimal(18, 2),
     status String
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 PARTITION BY toYYYYMM(order_time)
-ORDER BY (order_id, user_id, order_time)
+ORDER BY (order_id, user_id)
 SETTINGS index_granularity = 8192;
 
 CREATE TABLE IF NOT EXISTS fire_order
@@ -76,16 +65,15 @@ CREATE TABLE IF NOT EXISTS fire_order
     order_id UInt64,
     user_id UInt64,
     order_time DateTime,
-    product_name String,
     company_name String,
     price Decimal(18, 2),
     discount_percentage UInt32,
     discount_amount Decimal(18, 2),
     status String
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 PARTITION BY toYYYYMM(order_time)
-ORDER BY (order_id, user_id, order_time)
+ORDER BY (order_id, user_id)
 SETTINGS index_granularity = 8192;
 
 CREATE TABLE IF NOT EXISTS financial_order
@@ -101,9 +89,9 @@ CREATE TABLE IF NOT EXISTS financial_order
     net_amount Decimal(18, 2),
     currency String
 )
-ENGINE = MergeTree()
+ENGINE = ReplacingMergeTree()
 PARTITION BY toYYYYMM(order_time)
-ORDER BY (order_id, user_id, order_time)
+ORDER BY (order_id, user_id)
 SETTINGS index_granularity = 8192;
 
 -- ============================================================================
@@ -126,7 +114,6 @@ CREATE TABLE IF NOT EXISTS denormalized_purchase_events
 
     -- Product details (from 4 product tables)
     product_type LowCardinality(String),  -- 'third', 'body', 'medical', 'fire'
-    product_name String,
     company_name String,
     product_price Decimal(18, 2),
     product_discount_percentage UInt32,
@@ -169,7 +156,6 @@ SELECT
     to.order_id,
     to.order_time,
     'third' AS product_type,
-    to.product_name,
     to.company_name,
     to.price AS product_price,
     to.discount_percentage AS product_discount_percentage,
@@ -207,7 +193,6 @@ SELECT
     bo.order_id,
     bo.order_time,
     'body' AS product_type,
-    bo.product_name,
     bo.company_name,
     bo.price AS product_price,
     bo.discount_percentage AS product_discount_percentage,
@@ -245,7 +230,6 @@ SELECT
     mo.order_id,
     mo.order_time,
     'medical' AS product_type,
-    mo.product_name,
     mo.company_name,
     mo.price AS product_price,
     mo.discount_percentage AS product_discount_percentage,
@@ -283,7 +267,6 @@ SELECT
     fo_order.order_id,
     fo_order.order_time,
     'fire' AS product_type,
-    fo_order.product_name,
     fo_order.company_name,
     fo_order.price AS product_price,
     fo_order.discount_percentage AS product_discount_percentage,
